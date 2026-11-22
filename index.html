@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Paisajes y hora</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #000; overflow: hidden; cursor: none; }
+  body { font-family: "Segoe UI", "Noto Sans", Roboto, Arial, sans-serif; color: #fff; }
+  .foto { position: absolute; top: 0; right: 0; bottom: 0; left: 0; background-size: cover; background-position: center; opacity: 0; transition: opacity 2.5s ease; }
+  .foto.ver { opacity: 1; }
+  .sombra { position: absolute; top: 0; right: 0; bottom: 0; left: 0; pointer-events: none;
+    background: linear-gradient(to bottom, rgba(0,0,0,.45) 0%, rgba(0,0,0,0) 28%, rgba(0,0,0,0) 55%, rgba(0,0,0,.7) 100%); }
+  #frase { position: absolute; top: 4vh; right: 3.5vw; max-width: 30vw; text-align: right;
+    font-size: 1.8vw; line-height: 1.3; font-weight: 400; text-shadow: 0 2px 10px rgba(0,0,0,.8); transition: opacity 1.5s; }
+  #autor { display: block; margin-top: .6vh; font-size: 1.4vw; opacity: .85; font-style: italic; }
+  #reloj { position: absolute; left: 0; right: 0; bottom: 7vh; text-align: center; text-shadow: 0 4px 24px rgba(0,0,0,.75); }
+  #hora { font-size: 15vw; font-weight: 200; line-height: 1; letter-spacing: .02em; font-variant-numeric: tabular-nums; }
+  #fecha { font-size: 2.4vw; font-weight: 300; margin-top: .5vh; opacity: .95; }
+  #lugar { position: absolute; left: 3.5vw; bottom: 3vh; font-size: 1.4vw; opacity: .85; text-shadow: 0 2px 8px rgba(0,0,0,.9); }
+</style>
+</head>
+<body>
+<div class="foto" id="f0"></div>
+<div class="foto" id="f1"></div>
+<div class="sombra"></div>
+<div id="frase"><span id="texto"></span><span id="autor"></span></div>
+<div id="reloj"><div id="hora">--:--</div><div id="fecha"></div></div>
+<div id="lugar"></div>
+<script>
+var FOTOS = [{"l":"Castillo de Himeji, Japón","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/6/65/Himeji_Castle%2C_November_2016_-02.jpg/1920px-Himeji_Castle%2C_November_2016_-02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Costa de Kasumi, Japón","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e2/Imagoura_Kasumi_Coast04bs4440.jpg/1920px-Imagoura_Kasumi_Coast04bs4440.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Templo Kiyomizu-dera, Kioto, Japón","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/8/83/Kiyomizu-dera%2C_Kyoto%2C_November_2016_-01.jpg/1920px-Kiyomizu-dera%2C_Kyoto%2C_November_2016_-01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Yangshuo, Guangxi, China","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c2/1_aerial_yangshuo_panorama_2017.jpg/1920px-1_aerial_yangshuo_panorama_2017.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Montes de Yangshuo, China","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1b/1_pano_cuiping_yangshuo_2016.jpg/1920px-1_pano_cuiping_yangshuo_2016.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Zhangjiajie, Hunan, China","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/7/77/1_tianzishan_wulingyuan_zhangjiajie_2012.jpg/1920px-1_tianzishan_wulingyuan_zhangjiajie_2012.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Zhangjiajie, Hunan, China","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/6/62/1_zhangjiajie_huangshizhai_wulingyuan_panorama_2012.jpg/1920px-1_zhangjiajie_huangshizhai_wulingyuan_panorama_2012.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Gran Pagoda del Ganso Salvaje, Xi'an, China","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/9/91/Giant_Wild_Goose_Pagoda%2C_Xi%27an%2C_May%2C_2018-1.jpg/1920px-Giant_Wild_Goose_Pagoda%2C_Xi%27an%2C_May%2C_2018-1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Terrazas de arroz de Longsheng, China","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/d/df/Longsheng_Rice_Terraces_November_2017_014.jpg/1920px-Longsheng_Rice_Terraces_November_2017_014.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Pagodas del Sol y la Luna, Guilin, China","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2d/Sun_and_Moon_Pagodas_Guilin_November_2017_HDR.jpg/1920px-Sun_and_Moon_Pagodas_Guilin_November_2017_HDR.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Río Cu De, Da Nang, Vietnam","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5b/Cu_%C4%90%C3%AA_River%2C_Da_Nang.jpg/1920px-Cu_%C4%90%C3%AA_River%2C_Da_Nang.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Valle de Muong Thanh, Vietnam","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e8/M%C6%B0%E1%BB%9Dng_Thanh_Valley.jpg/1920px-M%C6%B0%E1%BB%9Dng_Thanh_Valley.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Atardecer en Hanói, Vietnam","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/2/20/Sunset_over_Hanoi_After_the_Rain.jpg/1920px-Sunset_over_Hanoi_After_the_Rain.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Volcán Batok, Java, Indonesia","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ee/Batok%2C_view_from_Bromo_volcano%2C_Java%2C_Indonesia%2C_20220820_0539_9409.jpg/1920px-Batok%2C_view_from_Bromo_volcano%2C_Java%2C_Indonesia%2C_20220820_0539_9409.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Amanecer en el Bromo, Java, Indonesia","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7d/Mount_Bromo_at_sunrise%2C_showing_its_volcanoes_and_Mount_Semeru_%28background%29.jpg/1920px-Mount_Bromo_at_sunrise%2C_showing_its_volcanoes_and_Mount_Semeru_%28background%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Arrozales de Muncan, Bali","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/2/28/Muncan_Bali_Indonesia_Rice-paddy-along-Jalan-Raya-Muncan-01.jpg/1920px-Muncan_Bali_Indonesia_Rice-paddy-along-Jalan-Raya-Muncan-01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Isla Padar, Komodo, Indonesia","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7b/Padar_Island%2C_Komodo_National_Park%2C_Indonesia%2C_20250822_0929_2659.jpg/1920px-Padar_Island%2C_Komodo_National_Park%2C_Indonesia%2C_20250822_0929_2659.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Lagos de Gokyo, Himalaya, Nepal","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/9/92/Aerial_View_of_Peaks_of_Khumbu%2C_Ngozumpa_Glacier_and_Gokyo_Lakes_%28crop%29.jpg/1920px-Aerial_View_of_Peaks_of_Khumbu%2C_Ngozumpa_Glacier_and_Gokyo_Lakes_%28crop%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Macizo del Annapurna, Nepal","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e3/Annapurna_Massif_Panorama.jpg/1920px-Annapurna_Massif_Panorama.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Annapurna Sur y Machapuchare, Nepal","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/6/61/Annapurna_South%2C_Himchuli%2C_Machapuchare_Himal-3794.jpg/1920px-Annapurna_South%2C_Himchuli%2C_Machapuchare_Himal-3794.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Monte Everest, Nepal","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/9/90/Everest%2C_Himalayas.jpg/1920px-Everest%2C_Himalayas.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Ama Dablam, Himalaya, Nepal","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/2/29/Himalayas%2C_Ama_Dablam%2C_Nepal.jpg/1920px-Himalayas%2C_Ama_Dablam%2C_Nepal.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Lago Gosaikunda, Nepal","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/0/03/Lake_Gosaikunda.jpg/1920px-Lake_Gosaikunda.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Vista desde Poon Hill, Nepal","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ea/Panorama_from_poonhill-2019-BJ.jpg/1920px-Panorama_from_poonhill-2019-BJ.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Volcán Seongsan, isla Jeju, Corea","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/1/19/Hydrangea_macrophylla_in_front_of_Seongsan_Ilchulbong_volcano_at_blue_hour_in_Jeju_Island_South_Korea.jpg/1920px-Hydrangea_macrophylla_in_front_of_Seongsan_Ilchulbong_volcano_at_blue_hour_in_Jeju_Island_South_Korea.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Gangneung, Corea del Sur","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/c/ce/Namdae_stream_water_reflection_of_colorful_clouds_from_Wolhwagyo_bridge_in_Gangneung_South_Korea.jpg/1920px-Namdae_stream_water_reflection_of_colorful_clouds_from_Wolhwagyo_bridge_in_Gangneung_South_Korea.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Lagos glaciares, Bután","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c3/Glacial_lakes%2C_Bhutan.jpg/1920px-Glacial_lakes%2C_Bhutan.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Lago Inle, Myanmar","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0e/20160805_-_Inle_Lake%2C_Myanmar_-_8453_DxO.jpg/1920px-20160805_-_Inle_Lake%2C_Myanmar_-_8453_DxO.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Monte Fuji desde Arakurayama, Japón","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a2/View_towards_Mount_Fuji_from_Arakurayama_Sengen_Park_in_Fujiyoshida%2C_Yamanashi%2C_Japan%2C_2024_May_-_2.jpg/1920px-View_towards_Mount_Fuji_from_Arakurayama_Sengen_Park_in_Fujiyoshida%2C_Yamanashi%2C_Japan%2C_2024_May_-_2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Pabellón Dorado Kinkaku-ji, Kioto, Japón","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/d/de/Water_reflection_of_Kinkaku-ji_Temple_a_sunny_day%2C_Kyoto%2C_Japan.jpg/1920px-Water_reflection_of_Kinkaku-ji_Temple_a_sunny_day%2C_Kyoto%2C_Japan.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Fushimi Inari, Kioto, Japón","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0e/Torii_path_with_lantern_at_Fushimi_Inari_Taisha_Shrine%2C_Kyoto%2C_Japan.jpg/1920px-Torii_path_with_lantern_at_Fushimi_Inari_Taisha_Shrine%2C_Kyoto%2C_Japan.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Bosque de bambú de Arashiyama, Japón","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4a/Bamboo_Forest%2C_Arashiyama%2C_Kyoto%2C_Japan.jpg/1920px-Bamboo_Forest%2C_Arashiyama%2C_Kyoto%2C_Japan.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Bahía de Ha Long, Vietnam","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/2/28/View_of_sea_from_Titov_Island%2C_Ha_Long_Bay%2C_Vietnam%2C_20240128_1337_3732.jpg/1920px-View_of_sea_from_Titov_Island%2C_Ha_Long_Bay%2C_Vietnam%2C_20240128_1337_3732.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Gran Muralla, Badaling, China","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/5/50/Badaling_China_Great-Wall-of-China-01.jpg/1920px-Badaling_China_Great-Wall-of-China-01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Gran Muralla China","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/1/10/20090529_Great_Wall_8185.jpg/1920px-20090529_Great_Wall_8185.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Cascadas Li Phi, Laos","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c3/Li_Phi_falls_at_dusk_with_colorful_sky_in_Don_Khon_Laos.jpg/1920px-Li_Phi_falls_at_dusk_with_colorful_sky_in_Don_Khon_Laos.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Jiuzhaigou, Sichuan, China","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/2/28/1_jiuzhaigou_valley_wu_hua_hai_2011b.jpg/1920px-1_jiuzhaigou_valley_wu_hua_hai_2011b.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Valle de Jiuzhaigou, China","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a3/Jiuzhaigou_Sichuan_China_Jiuzhaigou-Valley-02.jpg/1920px-Jiuzhaigou_Sichuan_China_Jiuzhaigou-Valley-02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Taj Mahal, Agra, India","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/7/74/Taj_Mahal%2C_Agra%2C_India_edit2.jpg/1920px-Taj_Mahal%2C_Agra%2C_India_edit2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Reflejo del Taj Mahal, India","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/a/af/Aks_The_Reflection_Taj_Mahal.jpg/1920px-Aks_The_Reflection_Taj_Mahal.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Angkor Wat, Camboya","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/e/eb/2014-Cambodge_Angkor_Wat_%2821%29.jpg/1920px-2014-Cambodge_Angkor_Wat_%2821%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Angkor Wat, Camboya","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d4/20171126_Angkor_Wat_4712_DxO.jpg/1920px-20171126_Angkor_Wat_4712_DxO.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Templos de Bagan, Myanmar","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/3/31/Bagan%2C_Myanmar%2C_Htilominlo_Temple_and_other_Buddhist_stupas_in_Bagan_plain.jpg/1920px-Bagan%2C_Myanmar%2C_Htilominlo_Temple_and_other_Buddhist_stupas_in_Bagan_plain.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Llanura de Bagan, Myanmar","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f0/Old_Bagan%2C_Myanmar%2C_Landscape_of_ancient_Bagan_city.jpg/1920px-Old_Bagan%2C_Myanmar%2C_Landscape_of_ancient_Bagan_city.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Tanah Lot, Bali","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f5/Tanah_Lot%2C_Bali%2C_Indonesia%2C_20220827_1008_1159.jpg/1920px-Tanah_Lot%2C_Bali%2C_Indonesia%2C_20220827_1008_1159.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Palacio Gyeongbokgung, Seúl, Corea","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5d/Gyeonghoeru_%28Royal_Banquet_Hall%29_at_Gyeongbokgung_Palace%2C_Seoul.jpg/1920px-Gyeonghoeru_%28Royal_Banquet_Hall%29_at_Gyeongbokgung_Palace%2C_Seoul.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Capadocia, Turquía","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3c/333_Cappadocia1.jpg/1920px-333_Cappadocia1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"},{"l":"Ortahisar, Capadocia, Turquía","u":"https://thumb.wikimedia.org/wikipedia/commons/thumb/7/79/Castillo_de_Ortahisar%2C_Capadocia%2C_Turqu%C3%ADa%2C_2024-10-01%2C_DD_01-03_HDR.jpg/1920px-Castillo_de_Ortahisar%2C_Capadocia%2C_Turqu%C3%ADa%2C_2024-10-01%2C_DD_01-03_HDR.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"}];
+var FRASES = [
+ ["Un viaje de mil millas comienza con un solo paso.", "Lao-Tse"],
+ ["Quien conoce a los demás es sabio; quien se conoce a sí mismo es iluminado.", "Lao-Tse"],
+ ["Aprender sin pensar es inútil; pensar sin aprender es peligroso.", "Confucio"],
+ ["No hagas a los demás lo que no quieres para ti.", "Confucio"],
+ ["Cae siete veces, levántate ocho.", "Proverbio japonés"],
+ ["No es que tengamos poco tiempo, es que perdemos mucho.", "Séneca"],
+ ["Mientras se aplaza la vida, la vida pasa.", "Séneca"],
+ ["No hay viento favorable para quien no sabe a qué puerto se dirige.", "Séneca"],
+ ["Mientras enseñamos, aprendemos.", "Séneca"],
+ ["No discutas más sobre cómo debe ser un hombre bueno: sé uno.", "Marco Aurelio"],
+ ["La felicidad de tu vida depende de la calidad de tus pensamientos.", "Marco Aurelio"],
+ ["No nos perturban las cosas, sino las opiniones que tenemos de ellas.", "Epicteto"],
+ ["Nadie se baña dos veces en el mismo río.", "Heráclito"],
+ ["Una vida sin examen no merece ser vivida.", "Sócrates"],
+ ["Una golondrina no hace verano, ni un solo día hace feliz a un hombre.", "Aristóteles"],
+ ["Somos lo que hacemos repetidamente. La excelencia no es un acto, sino un hábito.", "Will Durant, sobre Aristóteles"],
+ ["La vida es breve, el arte es largo.", "Hipócrates"],
+ ["Mente sana en cuerpo sano.", "Juvenal"],
+ ["Aprovecha el día.", "Horacio"],
+ ["Es mal plan el que no admite cambios.", "Publilio Siro"],
+ ["La gratitud no solo es la mayor de las virtudes, sino la madre de todas las demás.", "Cicerón"],
+ ["La mente no es un vaso que llenar, sino un fuego que encender.", "Plutarco"],
+ ["El que lee mucho y anda mucho, ve mucho y sabe mucho.", "Miguel de Cervantes"],
+ ["Caminante, no hay camino, se hace camino al andar.", "Antonio Machado"],
+ ["Todo hombre puede ser, si se lo propone, escultor de su propio cerebro.", "Santiago Ramón y Cajal"],
+ ["Yo soy yo y mi circunstancia.", "José Ortega y Gasset"],
+ ["La vida no es la que uno vivió, sino la que uno recuerda y cómo la recuerda para contarla.", "Gabriel García Márquez"],
+ ["No hay medicina que cure lo que no cura la felicidad.", "Gabriel García Márquez"],
+ ["Aprender a leer es la cosa más importante que me ha pasado en la vida.", "Mario Vargas Llosa"],
+ ["Hay, hermanos, muchísimo que hacer.", "César Vallejo"],
+ ["¿Para qué sirve la utopía? Para eso sirve: para caminar.", "Eduardo Galeano, citando a Fernando Birri"],
+ ["Cuando quieres algo, todo el universo conspira para ayudarte a conseguirlo.", "Paulo Coelho"],
+ ["Lo esencial es invisible a los ojos.", "Antoine de Saint-Exupéry"],
+ ["Somos de la misma materia que los sueños.", "William Shakespeare"],
+ ["Lo mejor es enemigo de lo bueno.", "Voltaire"],
+ ["Quien tiene un porqué para vivir puede soportar casi cualquier cómo.", "Friedrich Nietzsche"],
+ ["Todos piensan en cambiar el mundo, pero nadie piensa en cambiarse a sí mismo.", "León Tolstói"],
+ ["El mundo nos rompe a todos, y después muchos se vuelven fuertes en los lugares rotos.", "Ernest Hemingway"],
+ ["Si lloras porque el sol se ha ido, las lágrimas no te dejarán ver las estrellas.", "Rabindranath Tagore"],
+ ["El trabajo es el amor hecho visible.", "Khalil Gibran"],
+ ["Escribe en tu corazón que cada día es el mejor día del año.", "Ralph Waldo Emerson"],
+ ["Si uno avanza con confianza en la dirección de sus sueños, encontrará un éxito inesperado.", "Henry David Thoreau"],
+ ["Actúa como si lo que haces marcara la diferencia. La marca.", "William James"],
+ ["La vida es una aventura atrevida o no es nada.", "Helen Keller"],
+ ["Qué maravilloso es que nadie tenga que esperar ni un momento para empezar a mejorar el mundo.", "Ana Frank"],
+ ["Al hombre se le puede quitar todo, menos la última de las libertades: elegir su actitud ante cualquier circunstancia.", "Viktor Frankl"],
+ ["La fuerza no proviene de la capacidad física, sino de una voluntad indomable.", "Mahatma Gandhi"],
+ ["Si no puedes volar, corre; si no puedes correr, camina; si no puedes caminar, gatea; pero sigue adelante.", "Martin Luther King Jr."],
+ ["Si he visto más lejos es porque estoy sobre los hombros de gigantes.", "Isaac Newton"],
+ ["El azar solo favorece a las mentes preparadas.", "Louis Pasteur"],
+ ["La vida es como andar en bicicleta: para mantener el equilibrio hay que seguir avanzando.", "Albert Einstein"],
+ ["El genio es un uno por ciento de inspiración y un noventa y nueve por ciento de transpiración.", "Thomas Edison"],
+ ["Bien hecho es mejor que bien dicho.", "Benjamin Franklin"],
+ ["Tú puedes demorarte, pero el tiempo no.", "Benjamin Franklin"],
+ ["Todo es difícil antes de ser fácil.", "Thomas Fuller"],
+ ["Haz lo que puedas, con lo que tengas, donde estés.", "Theodore Roosevelt"],
+ ["Tanto si crees que puedes como si crees que no, tienes razón.", "Atribuido a Henry Ford"],
+ ["Todo lo que la mente puede concebir y creer, lo puede lograr.", "Napoleon Hill"],
+ ["Si quieres recoger miel, no patees la colmena.", "Dale Carnegie"],
+ ["Lo principal es mantener lo principal como lo principal.", "Stephen Covey"],
+ ["Cuida tu cuerpo: es el único lugar que tienes para vivir.", "Jim Rohn"],
+ ["No hay nada tan inútil como hacer con gran eficiencia algo que no debería hacerse.", "Peter Drucker"],
+ ["La única manera de hacer un gran trabajo es amar lo que haces.", "Steve Jobs"],
+ ["Sigue hambriento, sigue alocado.", "Steve Jobs"],
+ ["He fallado una y otra vez en mi vida, y por eso he tenido éxito.", "Michael Jordan"],
+ ["Sé agua, amigo mío.", "Bruce Lee"],
+ ["No te arrepientas de lo que has hecho.", "Miyamoto Musashi"],
+ ["Si cada uno contrata a personas más grandes que uno mismo, seremos una compañía de gigantes.", "David Ogilvy"],
+ ["Nunca dejes de probar, y tu publicidad nunca dejará de mejorar.", "David Ogilvy"],
+ ["Si apuntas a las estrellas quizá no atrapes ninguna, pero tampoco terminarás con un puñado de barro.", "Leo Burnett"],
+ ["Un principio no es un principio hasta que te cuesta dinero.", "Bill Bernbach"],
+ ["Nuestra mayor gloria no está en no caer nunca, sino en levantarnos cada vez que caemos.", "Oliver Goldsmith"],
+ ["Primero haz lo necesario, luego lo posible, y de pronto estarás haciendo lo imposible.", "Atribuido a san Francisco de Asís"],
+ ["Si caminas solo irás más rápido; si caminas acompañado llegarás más lejos.", "Proverbio africano"],
+ ["La constancia vence lo que la dicha no alcanza.", "Refrán"],
+ ["Donde hay voluntad, hay un camino.", "Refrán"],
+ ["La paciencia es amarga, pero su fruto es dulce.", "Proverbio"],
+ ["El mejor momento para plantar un árbol fue hace veinte años. El segundo mejor momento es ahora.", "Proverbio popular"],
+ ["Lo que haces cada día pesa más que lo que haces de vez en cuando.", ""],
+ ["Pequeños pasos, todos los días, construyen grandes cambios.", ""],
+ ["La disciplina es el puente entre tus metas y tus logros.", ""],
+ ["Hoy es un buen día para empezar.", ""],
+ ["Agradece lo que tienes mientras trabajas por lo que quieres.", ""],
+ ["Un paso a la vez también es avanzar.", ""],
+ ["Tu salud es tu mayor riqueza.", ""],
+ ["Grandes resultados nacen de hábitos pequeños.", ""],
+ ["La gratitud convierte lo que tenemos en suficiente.", ""],
+ ["Haz de cada día tu obra maestra.", ""],
+ ["Sonríe: hoy también es un regalo.", ""],
+ ["El bambú que se dobla es más fuerte que el roble que resiste.", ""]
+];
+
+var DIAS = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
+var MESES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+function dosDig(n) { return (n < 10 ? "0" : "") + n; }
+function reloj() {
+  // Lima = UTC-5 todo el año; se lee en UTC para no depender de la zona horaria de la tele
+  var t = new Date(Date.now() - 5 * 3600000);
+  document.getElementById("hora").textContent = dosDig(t.getUTCHours()) + ":" + dosDig(t.getUTCMinutes());
+  document.getElementById("fecha").textContent = DIAS[t.getUTCDay()] + ", " + t.getUTCDate() + " de " + MESES[t.getUTCMonth()];
+}
+function mezclar(a) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var x = a[i]; a[i] = a[j]; a[j] = x; } return a; }
+var orden = mezclar(FOTOS.slice()), idx = 0, capa = 0, fallos = 0;
+function siguienteFoto() {
+  if (idx >= orden.length) { orden = mezclar(FOTOS.slice()); idx = 0; }
+  var f = orden[idx++];
+  var img = new Image();
+  img.onload = function () {
+    fallos = 0;
+    var nueva = document.getElementById("f" + (1 - capa)), vieja = document.getElementById("f" + capa);
+    nueva.style.backgroundImage = "url('" + f.u + "')";
+    nueva.className = "foto ver"; vieja.className = "foto"; capa = 1 - capa;
+    document.getElementById("lugar").textContent = f.l;
+  };
+  img.onerror = function () { if (++fallos < 20) siguienteFoto(); };
+  img.src = f.u;
+}
+var frases = mezclar(FRASES.slice()), fi = 0;
+function siguienteFrase() {
+  var el = document.getElementById("frase"); el.style.opacity = 0;
+  setTimeout(function () {
+    if (fi >= frases.length) { frases = mezclar(FRASES.slice()); fi = 0; }
+    var q = frases[fi++];
+    document.getElementById("texto").textContent = "«" + q[0] + "»";
+    document.getElementById("autor").textContent = q[1] ? "— " + q[1] : "";
+    el.style.opacity = 1;
+  }, 1500);
+}
+reloj(); setInterval(reloj, 1000);
+siguienteFoto(); setInterval(siguienteFoto, 60000);
+siguienteFrase(); setInterval(siguienteFrase, 5 * 60000);
+</script>
+</body>
+</html>
+
